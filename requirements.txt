@@ -1,0 +1,190 @@
+# CropAdvisor AI - Requirements
+
+## System Requirements
+
+### Node.js & Package Manager
+- Node.js >= 18.0.0
+- npm >= 8.0.0 (comes with Node.js)
+- Git (for cloning repository)
+
+### Database
+- PostgreSQL >= 13.0
+
+### Browser
+- Modern browser with Web3 support (Chrome, Firefox, Edge)
+- MetaMask browser extension
+
+## Frontend Dependencies (package.json)
+
+### Production Dependencies
+react@^18.3.1                    # React framework
+react-dom@^18.3.1                # React DOM renderer
+web3@^4.3.0                      # Web3 library for Ethereum interaction
+@metamask/detect-provider@^2.0.0 # MetaMask provider detection
+axios@^1.6.2                     # HTTP client for API calls
+lucide-react@^0.344.0            # Icon library
+
+### Development Dependencies
+@eslint/js@^9.9.1                # ESLint JavaScript rules
+@types/react@^18.3.5             # React TypeScript definitions
+@types/react-dom@^18.3.0         # React DOM TypeScript definitions
+@vitejs/plugin-react@^4.3.1      # Vite React plugin
+autoprefixer@^10.4.18            # CSS autoprefixer
+eslint@^9.9.1                    # JavaScript linter
+eslint-plugin-react-hooks@^5.1.0-rc.0  # React hooks ESLint rules
+eslint-plugin-react-refresh@^0.4.11    # React refresh ESLint plugin
+globals@^15.9.0                  # Global variables for ESLint
+postcss@^8.4.35                  # CSS post-processor
+tailwindcss@^3.4.1               # Utility-first CSS framework
+typescript@^5.5.3                # TypeScript compiler
+typescript-eslint@^8.3.0         # TypeScript ESLint rules
+vite@^5.4.2                      # Build tool and dev server
+truffle@^5.11.5                  # Ethereum development framework
+@truffle/hdwallet-provider@^2.1.15  # HD wallet provider for Truffle
+
+## Backend Dependencies (server/package.json)
+
+### Production Dependencies
+express@^4.18.2                  # Web framework for Node.js
+cors@^2.8.5                      # Cross-origin resource sharing
+multer@^1.4.5-lts.1              # File upload middleware
+@google/generative-ai@^0.2.1     # Google Gemini AI SDK
+pg@^8.11.3                       # PostgreSQL client
+dotenv@^16.3.1                   # Environment variables loader
+
+### Development Dependencies
+nodemon@^3.0.2                   # Development server with auto-restart
+
+## External Services & API Keys Required
+
+### Google AI Studio
+- Gemini API Key
+- URL: https://makersuite.google.com/app/apikey
+- Purpose: AI-powered crop disease analysis
+
+### Infura
+- Project ID
+- URL: https://infura.io/
+- Purpose: Ethereum network access
+
+### PostgreSQL Database
+- Database server (local or cloud)
+- Database name: crop_advisor
+- User credentials with full privileges
+
+### Ethereum Network
+- MetaMask wallet
+- Sepolia testnet ETH (for testing)
+- Mainnet ETH (for production)
+
+## Installation Commands
+
+### Frontend Setup
+```bash
+npm install
+```
+
+### Backend Setup
+```bash
+cd server
+npm install
+```
+
+### Global Tools (Optional)
+```bash
+npm install -g truffle          # Smart contract development
+npm install -g ganache-cli      # Local blockchain for testing
+```
+
+## Environment Variables Required
+
+### Frontend (.env)
+```
+VITE_CONTRACT_ADDRESS=          # Deployed smart contract address
+VITE_NETWORK_ID=11155111        # Ethereum network ID (Sepolia)
+VITE_API_URL=http://localhost:3001  # Backend API URL
+```
+
+### Backend (server/.env)
+```
+DB_USER=postgres                # Database username
+DB_HOST=localhost               # Database host
+DB_NAME=crop_advisor            # Database name
+DB_PASSWORD=                    # Database password
+DB_PORT=5432                    # Database port
+GEMINI_API_KEY=                 # Google Gemini API key
+PORT=3001                       # Server port
+NODE_ENV=development            # Environment mode
+CONTRACT_ADDRESS=               # Smart contract address
+PRIVATE_KEY=                    # Ethereum private key (for deployment)
+INFURA_PROJECT_ID=              # Infura project ID
+```
+
+## Development Tools Versions
+
+### Recommended Versions
+- Node.js: 18.17.0 or higher
+- npm: 9.6.7 or higher
+- PostgreSQL: 15.3 or higher
+- Git: 2.40.0 or higher
+
+### Browser Compatibility
+- Chrome: 90+
+- Firefox: 88+
+- Safari: 14+
+- Edge: 90+
+
+## Operating System Support
+
+### Fully Supported
+- macOS 10.15+
+- Ubuntu 20.04+
+- Windows 10+
+
+### Partially Supported
+- Other Linux distributions
+- Windows 8.1 (with limitations)
+
+## Hardware Requirements
+
+### Minimum
+- RAM: 4GB
+- Storage: 2GB free space
+- CPU: Dual-core 2.0GHz
+
+### Recommended
+- RAM: 8GB or higher
+- Storage: 5GB free space
+- CPU: Quad-core 2.5GHz or higher
+- SSD storage for better performance
+
+## Network Requirements
+
+### Ports Used
+- Frontend: 5173 (Vite dev server)
+- Backend: 3001 (Express server)
+- Database: 5432 (PostgreSQL)
+- Blockchain: 8545 (Ganache local)
+
+### External Connections
+- Google AI Studio API
+- Infura Ethereum nodes
+- Sepolia testnet
+- MetaMask extension communication
+
+## Security Considerations
+
+### API Keys
+- Store all API keys in environment files
+- Never commit API keys to version control
+- Use different keys for development and production
+
+### Database
+- Use strong passwords
+- Enable SSL connections in production
+- Regular backups recommended
+
+### Smart Contracts
+- Test thoroughly on testnet before mainnet deployment
+- Use hardware wallets for production deployments
+- Monitor contract interactions and gas usage
