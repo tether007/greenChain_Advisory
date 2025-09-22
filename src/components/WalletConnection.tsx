@@ -107,8 +107,9 @@ export const WalletConnection: React.FC<WalletConnectionProps> = ({
   }
 
   return (
+    
     <div className="bg-white bg-opacity-20 backdrop-blur-lg border border-white border-opacity-30 rounded-2xl p-6 shadow-xl">
-      <div className="text-center">
+      <div className="text-center mx-auto">
         <Wallet className="w-12 h-12 text-white mx-auto mb-4" />
         <h3 className="text-white text-lg font-semibold mb-2">Connect Your Wallet</h3>
         <p className="text-gray-200 mb-4 text-sm">

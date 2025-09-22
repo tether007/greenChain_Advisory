@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 contract CropAdvisor {
     address public owner;
-    uint256 public analysisPrice = 0.001 ether; // ~$2.50 at current ETH prices
+    uint256 public analysisPrice = 0.00001 ether; //
     
     struct Analysis {
         address farmer;

@@ -127,10 +127,10 @@ export const PaymentHandler: React.FC<PaymentHandlerProps> = ({
         <div className="bg-gray-800 bg-opacity-50 rounded-xl p-4">
           <div className="flex justify-between items-center text-white">
             <span>AI Crop Analysis</span>
-            <span className="font-bold">0.001 ETH</span>
+            <span className="font-bold">0.00001 ETH</span>
           </div>
           <p className="text-gray-300 text-sm mt-1">
-            ~$2.50 USD • Instant AI diagnosis
+            ~₹7 INR • Instant AI diagnosis with Report
           </p>
         </div>
 

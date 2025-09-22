@@ -30,7 +30,7 @@ module.exports = {
   },
   compilers: {
     solc: {
-      version: "0.8.19",
+      version: "0.8.20",
       docker: false,
       settings: {
         optimizer: {

@@ -1,50 +1,79 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from "react";
+import { NitroliteClient, ChannelState } from "@erc7824/nitrolite";
 
 interface NitroliteState {
   isConnected: boolean;
-  client: any | null;
+  client: NitroliteClient | null;
+  channel: ChannelState | null;
   error: string | null;
 }
 
-export const useNitrolite = () => {
+export const useNitrolite = (userAddress: string) => {
   const [state, setState] = useState<NitroliteState>({
     isConnected: false,
     client: null,
-    error: null
+    channel: null,
+    error: null,
   });
 
   useEffect(() => {
-    initializeNitrolite();
+    init();
   }, []);
 
-  const initializeNitrolite = async () => {
+  const init = async () => {
     try {
-      // Minimal relayer client: call our backend to send tx from relayer key
-      const client = {
-        sendGaslessTransaction: async (txData: any) => {
-          console.log('Sending gasless transaction via backend relay:', txData);
-          const response = await fetch('/api/relay', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(txData)
-          });
-          if (!response.ok) {
-            throw new Error('Relay failed');
-          }
-          const data = await response.json();
-          return data; // { hash, status }
-        }
-      };
+      // 1. Connect to Sandbox Clearnode
+      const client = new NitroliteClient({
+        rpcUrl: "wss://clearnet-sandbox.yellow.com/ws",
+        address: userAddress,
+      });
 
-      setState({ isConnected: true, client, error: null });
-    } catch (error: any) {
+      await client.connect();
+
+      // 2. (Optional) create a new payment channel for MVP
+      const channel = await client.createChannel({
+        participants: [userAddress, "0xSellerAddress"], // dynamically set
+        challengeDuration: 60,
+      });
+
+      setState({
+        isConnected: true,
+        client,
+        channel,
+        error: null,
+      });
+    } catch (err: any) {
       setState({
         isConnected: false,
         client: null,
-        error: error.message
+        channel: null,
+        error: err.message,
       });
     }
   };
 
-  return state;
+  const sendPayment = async (amount: number, to: string) => {
+    if (!state.client || !state.channel) throw new Error("No channel active");
+
+    // 3. Make a transfer
+    const transfer = await state.client.createTransfer({
+      channelId: state.channel.id,
+      to,
+      amount,
+      asset: "YellowUSD", // sandbox token
+    });
+
+    console.log("Transfer proof:", transfer);
+
+    // 4. Update local state
+    const updatedChannel = await state.client.getChannel(state.channel.id);
+
+    setState({ ...state, channel: updatedChannel });
+    return transfer;
+  };
+
+  return {
+    ...state,
+    sendPayment,
+  };
 };
