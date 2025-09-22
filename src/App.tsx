@@ -5,6 +5,7 @@ import { ImageUpload } from './components/ImageUpload';
 import { PaymentHandler } from './components/PaymentHandler';
 import { AIAnalysis } from './components/AIAnalysis';
 import { useNitrolite } from './hooks/useNitrolite';
+import { NitrolitePanel } from './components/NitrolitePanel';
 import Web3 from 'web3';
 
 function App() {
@@ -13,7 +14,7 @@ function App() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [analysisId, setAnalysisId] = useState<string | null>(null);
   
-  const nitrolite = useNitrolite();
+  const nitrolite = useNitrolite(account || undefined);
 
   const handleWalletConnected = (connectedAccount: string, web3Instance: Web3) => {
     setAccount(connectedAccount);
@@ -102,6 +103,12 @@ function App() {
                 analysisId={analysisId}
                 selectedImage={selectedImage}
               />
+            )}
+
+            {account && (
+              <div className="mt-6">
+                <NitrolitePanel account={account} web3={web3} selectedImage={selectedImage} />
+              </div>
             )}
           </div>
         </div>
