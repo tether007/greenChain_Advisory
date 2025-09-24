@@ -14,7 +14,7 @@ export class ContractHelper {
 
   async getAnalysisPrice(): Promise<string> {
     try {
-      const price = await this.contract.methods.analysisPrice().call();
+      const price = await this.contract.methods.analysisPriceETH().call();
       return price;
     } catch (error) {
       console.error('Failed to get analysis price:', error);

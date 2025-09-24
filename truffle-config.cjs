@@ -19,13 +19,19 @@ module.exports = {
       gasPrice: 10000000000
     },
     sepolia: {
-      provider: () => new HDWalletProvider(
-        process.env.MNEMONIC,
-        `https://sepolia.infura.io/v3/${process.env.INFURA_PROJECT_ID}`
-      ),
+      provider: () => new HDWalletProvider({
+        mnemonic: { phrase: process.env.MNEMONIC },
+        providerOrUrl: process.env.SEPOLIA_RPC_URL || `https://sepolia.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
+        chainId: 11155111,
+        pollingInterval: 12000
+      }),
       network_id: 11155111,
       gas: 4500000,
-      gasPrice: 10000000000
+      gasPrice: 10000000000,
+      confirmations: 2,
+      timeoutBlocks: 200,
+      networkCheckTimeout: 100000,
+      skipDryRun: true
     }
   },
   compilers: {

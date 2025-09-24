@@ -1,0 +1,55 @@
+GreenChainAdvisory - Change Log
+
+Date: 2025-09-22
+
+Summary of changes
+- Added Nitrolite (Yellow SDK) integration hook and wired gasless path into payment flow.
+ - Added NitrolitePanel simulator UI and wired into App for end-to-end testing.
+ - Refined Solidity contracts for GreenChain Advisory, added ERC20 path and security.
+
+Details
+1) src/hooks/useNitrolite.ts
+- Implemented Nitrolite client hookup to ClearNode Sandbox (wss://clearnet-sandbox.yellow.com/ws).
+- Added connect/auth lifecycle, balance/channel fetch, faucet, open/close channel, gasless relay.
+- State exposed: isConnecting, isConnected, client, activeChannelId, unifiedBalance, channels, error.
+
+2) src/components/PaymentHandler.tsx
+- Uses useNitrolite(account) to prefer gasless relay for requestAnalysis.
+- Falls back to regular web3 send when Nitrolite is unavailable.
+- Keeps event decoding/receipt handling.
+
+3) src/components/NitrolitePanel.tsx (new)
+- Panel to drive and visualize flow: Faucet request, Open Channel, Full Simulation.
+- Shows unified balance, channels, and a timeline of steps (connect, channel, off-chain work, gasless payment, close).
+
+4) src/App.tsx
+- Imports and renders NitrolitePanel on the right column when wallet connected.
+- Passes account/web3/selectedImage to the panel.
+
+Notes
+- Balance endpoint path may require adjustment per current Clearnode API documentation.
+- Swap ClearNode URL when moving from Sandbox to Production.
+ - Contracts now target Solidity ^0.8.20, ensure Truffle/compilers match.
+
+Contracts
+1) contracts/CropAdvisor.sol
+- Upgraded to ^0.8.20 and added Ownable + ReentrancyGuard.
+- Added ERC20 payment path: setPaymentToken(token), setAnalysisPriceToken(amount), requestAnalysisToken(imageHash).
+- Kept ETH flow: analysisPriceETH, requestAnalysis(msg.value >= price).
+- Added admin withdrawals: withdrawETH(to) and withdrawToken(to).
+- Events: PaymentReceived, AnalysisCompleted, PriceUpdatedETH, PriceUpdatedToken, PaymentTokenUpdated.
+
+2) contracts/Marketplace.sol
+- Upgraded to ^0.8.20.
+- Indexed event args for better filtering.
+
+3) contracts/Migrations.sol / TestUSD.sol
+- Upgraded pragmas to ^0.8.20.
+
+Deployment (Truffle + Sepolia)
+- Ensure truffle-config points to Sepolia, compiler 0.8.20.
+- Deploy TestUSD (optional), then CropAdvisor, then Marketplace.
+- Migration 2 enhanced: reads PAYMENT_TOKEN_ADDRESS, ANALYSIS_PRICE_TOKEN, ANALYSIS_PRICE_ETH from env to auto-configure.
+- Migration 3 simplified: Marketplace has no constructor args; TestUSD still deploys for local/test.
+- If using ERC20 path: setPaymentToken(TUSD/YellowUSD) and setAnalysisPriceToken(amount) via env or manual.
+- Frontend env: VITE_CONTRACT_ADDRESS=<CropAdvisor>, backend: CONTRACT_ADDRESS=<same>.

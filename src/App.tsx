@@ -202,22 +202,23 @@ function App() {
                 )}
               </div>
 
-          {/* Right Column */}
-          <div>
-            {analysisId && (
-              <AIAnalysis
-                analysisId={analysisId}
-                selectedImage={selectedImage}
-              />
-            )}
+              {/* Right Column */}
+              <div>
+                {analysisId && (
+                  <AIAnalysis
+                    analysisId={analysisId}
+                    selectedImage={selectedImage}
+                  />
+                )}
 
-            {account && (
-              <div className="mt-6">
-                <NitrolitePanel account={account} web3={web3} selectedImage={selectedImage} />
+                {account && (
+                  <div className="mt-6">
+                    <NitrolitePanel account={account} web3={web3} selectedImage={selectedImage} />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+          )}
 
           {/* Instructions */}
           {!account && (

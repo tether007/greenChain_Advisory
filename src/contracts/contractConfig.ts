@@ -1,6 +1,21 @@
 export const cropAdvisorAddress =
   (import.meta as any).env?.VITE_CONTRACT_ADDRESS || "0x..."; // set via .env or replace after deploy
 
+export const paymentTokenAddress = (import.meta as any).env?.VITE_PAYMENT_TOKEN || ""; // Yellow Test USD on Sepolia
+
+export const minimalErc20Abi = [
+  {
+    "constant": false,
+    "inputs": [
+      { "name": "spender", "type": "address" },
+      { "name": "amount", "type": "uint256" }
+    ],
+    "name": "approve",
+    "outputs": [{ "name": "", "type": "bool" }],
+    "type": "function"
+  }
+] as const;
+
 export const cropAdvisorABI = [
   {
     "inputs": [],
@@ -85,7 +100,7 @@ export const cropAdvisorABI = [
   },
   {
     "inputs": [],
-    "name": "analysisPrice",
+    "name": "analysisPriceETH",
     "outputs": [
       {
         "internalType": "uint256",
@@ -94,6 +109,22 @@ export const cropAdvisorABI = [
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "analysisPriceToken",
+    "outputs": [
+      { "internalType": "uint256", "name": "", "type": "uint256" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [ { "internalType": "string", "name": "_imageHash", "type": "string" } ],
+    "name": "requestAnalysisToken",
+    "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

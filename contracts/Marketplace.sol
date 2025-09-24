@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 contract Marketplace {
     struct Listing {
@@ -14,8 +14,8 @@ contract Marketplace {
     uint256 public nextId;
     mapping(uint256 => Listing) public listings;
 
-    event ListingCreated(uint256 id, address indexed seller, uint256 price);
-    event ListingMarkedSold(uint256 id);
+    event ListingCreated(uint256 indexed id, address indexed seller, uint256 price);
+    event ListingMarkedSold(uint256 indexed id);
 
     function createListing(string calldata title, string calldata description, uint256 price) external {
         listings[nextId] = Listing(nextId, msg.sender, title, description, price, false);

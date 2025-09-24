@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { CreditCard, Loader, CheckCircle, AlertCircle } from 'lucide-react';
 import Web3 from 'web3';
 import axios from 'axios';
-import { cropAdvisorABI, cropAdvisorAddress } from '../contracts/contractConfig';
+import { cropAdvisorABI, cropAdvisorAddress, paymentTokenAddress, minimalErc20Abi } from '../contracts/contractConfig';
 import { useNitrolite } from '../hooks/useNitrolite';
 
 interface PaymentHandlerProps {
@@ -21,7 +21,7 @@ export const PaymentHandler: React.FC<PaymentHandlerProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [transactionHash, setTransactionHash] = useState<string | null>(null);
-  const nitrolite = useNitrolite();
+  const nitrolite = useNitrolite(account);
 
   const handlePayment = async () => {
     setIsProcessing(true);
@@ -39,60 +39,98 @@ export const PaymentHandler: React.FC<PaymentHandlerProps> = ({
         throw new Error('No contract found at the configured address on the current network. Check network and address.');
       }
 
-      const contract = new web3.eth.Contract(cropAdvisorABI, cropAdvisorAddress);
+      const contract = new web3.eth.Contract(cropAdvisorABI as any, cropAdvisorAddress);
       
-      // Get analysis price from contract
-      const analysisPrice = await contract.methods.analysisPrice().call();
+      // Decide path and read prices
+      const useToken = !!paymentTokenAddress;
+      const analysisPriceEth = await contract.methods.analysisPriceETH().call();
+      const analysisPriceToken = useToken ? await contract.methods.analysisPriceToken().call() : '0';
       
       // Create image hash (simplified for MVP)
       const imageHash = `${selectedImage.name}-${Date.now()}`;
       
+      // Helper: wait for relay receipt
+      const waitForReceipt = async (hash: string) => {
+        let receipt = null as any;
+        for (let i = 0; i < 60; i++) {
+          receipt = await web3.eth.getTransactionReceipt(hash);
+          if (receipt) return receipt;
+          await new Promise(r => setTimeout(r, 1000));
+        }
+        throw new Error('Timed out waiting for gasless transaction receipt');
+      };
+
       // Send transaction
       let transaction: any;
-      if (nitrolite.isConnected && nitrolite.client) {
-        const relayResp = await nitrolite.client.sendGaslessTransaction({
-          to: cropAdvisorAddress,
-          data: contract.methods.requestAnalysis(imageHash).encodeABI(),
-          value: String(analysisPrice)
-        });
+      if (nitrolite.isConnected && nitrolite.sendGaslessTransaction) {
+        if (useToken) {
+          // Gasless ERC20 approve
+          const erc20 = new web3.eth.Contract(minimalErc20Abi as any, paymentTokenAddress);
+          const approveData = erc20.methods.approve(cropAdvisorAddress, String(analysisPriceToken)).encodeABI();
+          await nitrolite.sendGaslessTransaction({ to: paymentTokenAddress as string, data: approveData });
 
-        // Poll for receipt and decode event
-        const hash = relayResp.hash;
-        const waitForReceipt = async () => {
-          let receipt = null as any;
-          for (let i = 0; i < 60; i++) {
-            receipt = await web3.eth.getTransactionReceipt(hash);
-            if (receipt) return receipt;
-            await new Promise(r => setTimeout(r, 1000));
-          }
-          throw new Error('Timed out waiting for gasless transaction receipt');
-        };
-        const receipt = await waitForReceipt();
-        setTransactionHash(hash);
+          // Gasless token request
+          const relayResp = await nitrolite.sendGaslessTransaction({
+            to: cropAdvisorAddress,
+            data: contract.methods.requestAnalysisToken(imageHash).encodeABI(),
+          });
+          const hash = (relayResp as any).hash || (relayResp as any).transactionHash;
+          const receipt = await waitForReceipt(hash);
+          setTransactionHash(hash);
 
-        // Decode PaymentReceived(address,uint256,uint256)
-        const eventSig = web3.utils.keccak256('PaymentReceived(address,uint256,uint256)');
-        const log = receipt.logs.find((l: any) => l.topics && l.topics[0] === eventSig);
-        if (!log) throw new Error('Payment event not found');
-        const decoded = web3.eth.abi.decodeLog(
-          [
-            { type: 'address', name: 'farmer', indexed: true },
-            { type: 'uint256', name: 'analysisId', indexed: true },
-            { type: 'uint256', name: 'amount', indexed: false }
-          ],
-          log.data,
-          log.topics.slice(1)
-        ) as any;
-        transaction = { events: { PaymentReceived: { returnValues: decoded } } };
+          const eventSig = web3.utils.keccak256('PaymentReceived(address,uint256,uint256)');
+          const log = receipt.logs.find((l: any) => l.topics && l.topics[0] === eventSig);
+          if (!log) throw new Error('Payment event not found');
+          const decoded = web3.eth.abi.decodeLog(
+            [
+              { type: 'address', name: 'farmer', indexed: true },
+              { type: 'uint256', name: 'analysisId', indexed: true },
+              { type: 'uint256', name: 'amount', indexed: false }
+            ],
+            log.data,
+            log.topics.slice(1)
+          ) as any;
+          transaction = { events: { PaymentReceived: { returnValues: decoded } }, transactionHash: hash };
+        } else {
+          // Gasless ETH fallback
+          const relayResp = await nitrolite.sendGaslessTransaction({
+            to: cropAdvisorAddress,
+            data: contract.methods.requestAnalysis(imageHash).encodeABI(),
+            value: String(analysisPriceEth)
+          });
+          const hash = (relayResp as any).hash || (relayResp as any).transactionHash;
+          const receipt = await waitForReceipt(hash);
+          setTransactionHash(hash);
+
+          const eventSig = web3.utils.keccak256('PaymentReceived(address,uint256,uint256)');
+          const log = receipt.logs.find((l: any) => l.topics && l.topics[0] === eventSig);
+          if (!log) throw new Error('Payment event not found');
+          const decoded = web3.eth.abi.decodeLog(
+            [
+              { type: 'address', name: 'farmer', indexed: true },
+              { type: 'uint256', name: 'analysisId', indexed: true },
+              { type: 'uint256', name: 'amount', indexed: false }
+            ],
+            log.data,
+            log.topics.slice(1)
+          ) as any;
+          transaction = { events: { PaymentReceived: { returnValues: decoded } }, transactionHash: hash };
+        }
       } else {
-        transaction = await contract.methods.requestAnalysis(imageHash).send({
-          from: account,
-          value: String(analysisPrice),
-          gas: '300000'
-        });
+        if (useToken) {
+          const erc20 = new web3.eth.Contract(minimalErc20Abi as any, paymentTokenAddress);
+          await erc20.methods.approve(cropAdvisorAddress, String(analysisPriceToken)).send({ from: account });
+          transaction = await contract.methods.requestAnalysisToken(imageHash).send({ from: account, gas: '300000' });
+        } else {
+          transaction = await contract.methods.requestAnalysis(imageHash).send({
+            from: account,
+            value: String(analysisPriceEth),
+            gas: '300000'
+          });
+        }
       }
       
-      setTransactionHash(transaction.transactionHash);
+      setTransactionHash(transaction.transactionHash || transactionHash);
       
       // Get the analysis ID from the event
       const events = (transaction as any).events;
